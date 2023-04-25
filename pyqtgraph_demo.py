@@ -4,8 +4,9 @@ import sys
 import numpy as np
 import pyqtgraph as pg
 import time
+import psutil
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtWidgets import (
     QApplication,
     QGridLayout,
@@ -32,13 +33,32 @@ class QtGraphWindow(QMainWindow):
         centralWidget = QWidget(self)
         centralWidget.setLayout(self.generalLayout)
         self.setCentralWidget(centralWidget)
+        
+        # initialize data storage
+        self.x = []
+        self.y = []
+        self.timer = QTimer()
+        self.timer.setInterval(10)
+
+        self.myai = AnalogInput()
+
         self._createDisplay()
         self._createButtons()
         self._connect_signals()
 
     def _createDisplay(self):
         self.display = pg.GraphicsLayoutWidget()
-        # todo: add axisitems and initialize the plots
+        self.plotitem = self.display.addPlot(0,0)
+        self.plotitem.setLabel('bottom', 'Bottom Axis', 's')
+        self.plotitem.setLabel('left', 'Left Axis', 'V')
+        self.plotdataitem = self.plotitem.plot([], [], pen='r')
+        
+
+        self.plotitem2 = self.display.addPlot(1,0)
+        self.plotitem2.setLabel('bottom', 'Bottom Axis', 's')
+        self.plotitem2.setLabel('left', 'Left Axis', 'V')
+        self.plotdataitem2 = self.plotitem2.plot([], [], pen='r')
+
         self.display.setFixedWidth(DISPLAY_WIDTH)
         self.display.show()
         self.generalLayout.addWidget(self.display)
@@ -60,21 +80,44 @@ class QtGraphWindow(QMainWindow):
         self.buttonMap['start'].clicked.connect(self.meas_start)
         self.buttonMap['stop'].clicked.connect(self.meas_stop)
 
+        self.timer.timeout.connect(self.update_plot_data)
+
     def meas_start(self):
-        print('start!')
-        # todo: perform measurements and plot the data
 
-        """CODE BELOW NEEDS TO BE CHANGED"""
-        myai = AnalogInput()
-        data = []
+        self.x = np.array([])
+        self.y = np.array([])
 
-        for i in range(1000):
-            data.append(myai.get_y())
-            time.sleep(0.01)
-        print(data)
+        self.y2 = np.array([])
+        self.timer.start()
+
+        # print('start!')
+        # # todo: perform measurements and plot the data
+
+        # """CODE BELOW NEEDS TO BE CHANGED"""
+        # myai = AnalogInput()
+        # data = []
+
+        # for i in range(1000):
+        #     data.append(myai.get_y())
+        #     time.sleep(0.01)
+        # print(data)
 
     def meas_stop(self):
         print('stop!')
+        self.timer.stop()
+
+    def update_plot_data(self):
+        x, y = self.myai.get_xy()
+        self.x = np.append(self.x, x)
+        self.y = np.append(self.y, y)
+
+        self.y2 = np.append(self.y2, psutil.virtual_memory()[2])
+
+        self.plotdataitem.setData(self.x - self.x[0], self.y)
+        self.plotdataitem2.setData(self.x - self.x[0], self.y2)
+
+        if len(self.x) > 1000:
+            self.timer.stop()
 
 class AnalogInput():
     """Dummy Analog Input: Generate a Sinusoidal Function"""
