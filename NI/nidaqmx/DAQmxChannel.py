@@ -15,9 +15,13 @@ class DAQmxChannel:
         pass  # todo: close the task and create a new one
 
     def start(self):
+        print("123456")
+        pass
         # pydaqmx.DAQmxStartTask(self.th) # todo
 
     def stop(self):
+        print("123456")
+        pass
         # pydaqmx.DAQmxStopTask(self.th) # todo
 
     # todo: are the remaining functions necessary?
