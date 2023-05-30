@@ -9,16 +9,19 @@ class DAQmxChannel:
         self._create_task()
 
     def _create_task(self):
-        self.task = None  # todo: create a task and store the reference
+        self.task = nidaqmx.Task()  # todo: create a task and store the reference
 
     def reset(self):
+        self.task.close()
         pass  # todo: close the task and create a new one
 
     def start(self):
+        self.task.start()
         pass
         # pydaqmx.DAQmxStartTask(self.th) # todo
 
     def stop(self):
+        self.task.stop()
         pass
         # pydaqmx.DAQmxStartTask(self.th) # todo
 
@@ -75,7 +78,7 @@ class DAQmxChannel:
         pydaqmx.DAQmxWaitUntilTaskDone(self.th, -1)
     '''
 
-class DAQmxAnalogInput(DAQmxChannel.DAQmxChannel):
+class DAQmxAnalogInput(DAQmxChannel):
 
     def __init__(self, dev, minval=-10.0, maxval=+10.0):
         super().__init__(dev)
