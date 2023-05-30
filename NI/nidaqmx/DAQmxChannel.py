@@ -16,6 +16,7 @@ class DAQmxChannel:
 
     def start(self):
         pass
+        print("F")
         # pydaqmx.DAQmxStartTask(self.th) # todo
 
     def stop(self):
