@@ -131,4 +131,69 @@ class DAQmxAnalogOutput(DAQmxChannel):
         else:
             self.task.write(v, auto_start=True)
 
+class DAQmxCounterInput(DAQmxChannel):
+    def __init__(self, dev):
+        super().__init__(dev)
+        self.ext_src = ''
+        self.decoding_type = ''
+        self.zidx_enable = ''
+        self.zidx_val = 0.1
+        self.zidx_phase = constants.EncoderZIndexPhase
+        self.units = constants.AngleUnits
+        self.pulses_per_rev = 1
+        self.initial_angle = 0.01
 
+        self.min_val = 0.1
+        self.max_val = 1.0
+
+        self.edge = constants.Edge
+
+    def ang_encoder(self):
+        self.task.ci_channels.add_ci_ang_encoder_chan(self.dev, units=self.units)
+
+    def ang_velocity(self):
+        self.task.ci_channels.add_ci_ang_velocity_chan(self.dev)
+
+    def count_edges(self):
+        self.initial_count = 1
+        self.count_direction = constants.CountDirection
+        self.task.ci_channels.add_ci_count_edges_chan(self.dev, self.edge, self.initial_count, self.count_direction)
+
+    def duty_cycle(self):
+        self.min_freq = 0.1
+        self.max_freq = 1.0
+        self.task.ci_channels.add_ci_duty_cycle_chan(self.dev)
+
+    def freq(self):
+        self.meas_methods = constants.CounterFrequencyMethod
+        self.meas_time = 1.0
+        self.divisor = 1.0
+        self.task.ci_channels.add_ci_freq_chan(self.dev, self.min_val, self.max_val, self.units, self.edge, self.meas_methods, self.meas_time, self.divisor)
+
+
+
+class DAQmxCounterOutput(DAQmxChannel):
+
+    def __init__(self, dev):
+        super().__init__(dev)
+        self.ext_src = ''
+        self.src_term = ''
+        
+        self.units = constants.FrequencyUnits
+        self.idle_state = constants.Level
+        self.delay = 0.001
+        self.freq = 0.000000001
+        self.duty_cycle = 1
+        self.low_ticks = 1
+        self.high_ticks = 1
+        self.low_time = 1.0
+        self.high_time = 1.0
+    
+    def set_freq(self):
+        self.task.co_channels.add_co_pulse_chan_freq(self.dev, self.units, self.idle_state, self.delay, self.freq, self.duty_cycle)
+        
+    def set_ticks(self):    
+        self.task.co_channels.add_co_pulse_chan_ticks(self.dev, self.src_term, self.idle_state, self.delay, self.low_ticks, self.high_ticks)
+        
+    def set_times(self):
+        self.task.co_channels.add_co_pulse_chan_time(self.dev, self.units, self.idle_state, self.delay, self.low_time, self.high_time)
