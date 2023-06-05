@@ -42,7 +42,6 @@ class DAQmxChannel:
     def _clear_task(self):
         self.task.close()
 
-    # todo: are the remaining functions necessary?
     def set_sample_clock(self, src, edge, n):
         self.clock_src = src
         self.clock_edge = edge
