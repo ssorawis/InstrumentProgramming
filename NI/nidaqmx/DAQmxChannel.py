@@ -104,6 +104,7 @@ class DAQmxAnalogInput(DAQmxChannel):
 
     def _create_task(self, minval=-10.0, maxval=+10.0):
         super()._create_task()
+        self.task.ao_channels.add_ao_voltage_chan(self.dev, name_to_assign_to_channel="", min_val="", max_val="" )
         # todo: call nidaqmx to add physical ai channel according to dev
         # pydaqmx.DAQmxCreateAIVoltageChan(self.th, self.dev, '', pydaqmx.DAQmx_Val_Diff, minval, maxval, pydaqmx.DAQmx_Val_Volts, '')
 
@@ -121,7 +122,7 @@ class DAQmxAnalogInput(DAQmxChannel):
         return readarray
     '''
 
-class DAQmxAnalogOutput(DAQmxChannel.DAQmxChannel):
+class DAQmxAnalogOutput(DAQmxChannel):
 
     def __init__(self, dev, minval=-10, maxval=10):
         super().__init__(dev)
@@ -136,6 +137,7 @@ class DAQmxAnalogOutput(DAQmxChannel.DAQmxChannel):
         self.currentVoltage = 0.0
         self.lastSweepVoltage = 0.0
         # todo: call nidaqmx to add physical ai channel according to dev
+        self.task.ao_channels.add_ao_voltage_chan(self.dev, name_to_assign_to_channel="", min_val="", max_val="" )
         # pydaqmx.DAQmxCreateAOVoltageChan(self.th, self.dev, '', self.minval, self.maxval, pydaqmx.DAQmx_Val_Volts, '')
 
     # todo: are these functions necessary?
