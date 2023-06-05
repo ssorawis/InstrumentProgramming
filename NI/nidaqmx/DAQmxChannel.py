@@ -1,7 +1,6 @@
 import nidaqmx
 import nidaqmx.constants as constants
 import numpy as np
-import numpy as np
 import time
 
 
@@ -84,16 +83,16 @@ class DAQmxAnalogInput(DAQmxChannel):
 
     def _create_task(self, minval=-10.0, maxval=+10.0):
         super()._create_task()
-        self.task.ai_channels.add_ai_voltage_chan(self.dev, name_to_assign_to_channel="", min_val="", max_val="" )
+        self.task.ai_channels.add_ai_voltage_chan(self.dev, min_val=minval, max_val=maxval )
 
     def get_voltage(self):
-        readarray = self.get_voltages(1)
-        return readarray[0]
+        read_voltage = self.task.read(number_of_samples_per_channel=1)
+        return read_voltage[0]
 
     def get_voltages(self, n):
         readarray = np.zeros(self.numchan * n)
-        readarray = self.task.read()
-        return np.array(readarray)
+        read_voltage = self.task.read(number_of_samples_per_channel=readarray)
+        return np.array(read_voltage)
 
 
 class DAQmxAnalogOutput(DAQmxChannel):
@@ -111,36 +110,26 @@ class DAQmxAnalogOutput(DAQmxChannel):
         self.currentVoltage = 0.0
         self.lastSweepVoltage = 0.0
         # todo: call nidaqmx to add physical ai channel according to dev
-        self.task.ao_channels.add_ao_voltage_chan(self.dev, name_to_assign_to_channel="", min_val="", max_val="" )
-        # pydaqmx.DAQmxCreateAOVoltageChan(self.th, self.dev, '', self.minval, self.maxval, pydaqmx.DAQmx_Val_Volts, '')
+        self.task.ao_channels.add_ao_voltage_chan(dev, min_val=self.minval, max_val=self.maxval )
 
-    # todo: are these functions necessary?
-    '''
+    def set_range(self, minval, maxval):
+        self.minval = minval
+        self.maxval = maxval
+        self._clear_task()
+        self._create_task()  
+
     def set_voltage(self, v):
         if v < self.minval:
-            print('V < Vmin. Setting Vmin')
-            self.setVoltage(self.minval)
+            v = self.minval
         elif v > self.maxval:
-            print('V > Vmax. Setting Vmax')
-            self.setVoltage(self.maxval)
-        else:
-            autostart = 1
-            timeout = -1
-            # print(v)
-            # print(self.dev)
-            pydaqmx.DAQmxWriteAnalogScalarF64(self.th, autostart, timeout, v, None)
-            self.currentVoltage = v
+            v = self.maxval
 
-    def get_voltage(self):
-        return self.currentVoltage
+        self.task.write(v, auto_start=True)
 
     def set_voltages(self, v):
         if min(v) < self.minval or max(v) > self.maxval:
             print('value out of range')
         else:
-            autostart = 0
-            timeout = -1
-            writeval = ctypes.c_int32()
-            pydaqmx.DAQmxWriteAnalogF64(self.th, len(v), autostart, timeout, pydaqmx.DAQmx_Val_GroupByChannel, v, writeval, None)
-        self.lastSweepVoltage = v[-1]
-    '''
+            self.task.write(v, auto_start=True)
+
+
