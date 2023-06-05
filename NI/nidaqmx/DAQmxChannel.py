@@ -1,6 +1,8 @@
 import nidaqmx
 import nidaqmx.constants as constants
 import numpy as np
+import numpy as np
+import time
 
 
 class DAQmxChannel:
@@ -41,6 +43,7 @@ class DAQmxChannel:
     def _clear_task(self):
         self.task.close()
 
+    # todo: are the remaining functions necessary?
     def set_sample_clock(self, src, edge, n):
         self.clock_src = src
         self.clock_edge = edge
@@ -52,49 +55,25 @@ class DAQmxChannel:
 
         self.isTimed = True
 
+    def set_start_trigger(self, src, edge=nidaqmx.constants.Edge.RISING):
+        self.task.triggers.start_trigger.cfg_dig_edge_start_trig(source=src, trigger_edge=edge)
 
-
-
-
-    # todo: are the remaining functions necessary?
-
-    '''
-
-
-    def set_int_clock(self, rate, n):
-        if n < self.cont_buffer_size:
-            pydaqmx.DAQmxCfgSampClkTiming(self.th, 'OnboardClock', rate, pydaqmx.DAQmx_Val_Rising, pydaqmx.DAQmx_Val_FiniteSamps, n)
-        else:  # Use continuous sampling
-            pydaqmx.DAQmxCfgSampClkTiming(self.th, 'OnboardClock', rate, pydaqmx.DAQmx_Val_Rising, pydaqmx.DAQmx_Val_ContSamps, self.cont_buffer_size)
-        self.isTimed = True
-
-    def set_n_sample(self, n):
-        if self.clock_src == '':
-            print('No Clock Src Assigned')
-        else:
-            self.setSampleClock(self.clock_src, self.clock_edge, n)
-
-    def set_read_all_samples(self, b):  # This should be named something more like read_only_available_samples
-        pydaqmx.DAQmxSetReadReadAllAvailSamp(self.th, b)
-        self.read_all_samples = b
-
-    def set_start_trigger(self, src, edge=pydaqmx.DAQmx_Val_Rising):
-        pydaqmx.DAQmxCfgDigEdgeStartTrig(self.th, src, edge)
-
-    def set_arm_start_trigger(self, src, edge=pydaqmx.DAQmx_Val_Rising):
-        pydaqmx.DAQmxSetArmStartTrigType(self.th,pydaqmx.DAQmx_Val_DigEdge)
-        pydaqmx.DAQmxSetDigEdgeArmStartTrigSrc(self.th,src)
-        pydaqmx.DAQmxSetDigEdgeArmStartTrigEdge(self.th,edge)
-
-    def set_finite_samples(self, n):
-        pydaqmx.DAQmxCfgImplicitTiming(self.th, pydaqmx.DAQmx_Val_FiniteSamps, n)
-
-    def set_retriggerable(self, b):
-        pydaqmx.DAQmxSetStartTrigRetriggerable(self.th, b)
 
     def wait_until_done(self):
-        pydaqmx.DAQmxWaitUntilTaskDone(self.th, -1)
-    '''
+        self.task.wait_until_done(timeout=-1)
+
+    def wait_until_done_thd(self, thd):
+        daqmx_running = 1
+        while daqmx_running != 0 and not thd.cancel:
+            try:
+                daqmx_running = not self.th.is_task_done()
+            except:
+                time.sleep(0.01)
+
+        if thd.cancel:
+            return 1
+        else:
+            return 0
 
 class DAQmxAnalogInput(DAQmxChannel):
 
