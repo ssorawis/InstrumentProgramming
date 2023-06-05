@@ -1,5 +1,6 @@
 import nidaqmx
 import nidaqmx.constants as constants
+import numpy as np
 
 
 class DAQmxChannel:
@@ -36,7 +37,7 @@ class DAQmxChannel:
     def stop(self):
         self.task.stop()
         self.task.task_control(nidaqmx.constants.TaskControl.UNRESERVE)
-        
+    
     def _clear_task(self):
         self.task.close()
 
@@ -104,23 +105,17 @@ class DAQmxAnalogInput(DAQmxChannel):
 
     def _create_task(self, minval=-10.0, maxval=+10.0):
         super()._create_task()
-        self.task.ao_channels.add_ao_voltage_chan(self.dev, name_to_assign_to_channel="", min_val="", max_val="" )
-        # todo: call nidaqmx to add physical ai channel according to dev
-        # pydaqmx.DAQmxCreateAIVoltageChan(self.th, self.dev, '', pydaqmx.DAQmx_Val_Diff, minval, maxval, pydaqmx.DAQmx_Val_Volts, '')
+        self.task.ai_channels.add_ai_voltage_chan(self.dev, name_to_assign_to_channel="", min_val="", max_val="" )
 
-    # todo: are these functions necessary?
-
-    '''
     def get_voltage(self):
-        return self.task.read()
+        readarray = self.get_voltages(1)
+        return readarray[0]
 
     def get_voltages(self, n):
-        read = ctypes.c_int32()
-        readarray = np.zeros((self.numchan*n,), dtype=np.float64)
-        pydaqmx.DAQmxReadAnalogF64(self.th, n, -1, pydaqmx.DAQmx_Val_GroupByChannel, readarray, self.numchan*n, read, None)
+        readarray = np.zeros(self.numchan * n)
+        readarray = self.task.read()
+        return np.array(readarray)
 
-        return readarray
-    '''
 
 class DAQmxAnalogOutput(DAQmxChannel):
 
@@ -129,7 +124,7 @@ class DAQmxAnalogOutput(DAQmxChannel):
         self._create_task(dev, minval, maxval)
 
     def _create_task(self, dev, minval=-10, maxval=10):
-        super().create_task()
+        super()._create_task()
         self.minval = minval
         self.maxval = maxval
 
