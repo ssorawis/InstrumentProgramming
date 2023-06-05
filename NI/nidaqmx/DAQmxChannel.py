@@ -1,6 +1,7 @@
 import nidaqmx
 import nidaqmx.constants as constants
 import numpy as np
+import numpy as np
 import time
 
 
@@ -83,21 +84,7 @@ class DAQmxAnalogInput(DAQmxChannel):
 
     def _create_task(self, minval=-10.0, maxval=+10.0):
         super()._create_task()
-        self.task.ai_channels.add_ai_voltage_chan(self.dev, min_val=minval, max_val=maxval )
-
-    def set_range(self, minval, maxval):
-        self.minval = minval
-        self.maxval = maxval
-        self._clear_task()
-        self._create_task()
-
-    def set_voltage(self, v):
-        if v < self.minval:
-            v = self.minval
-        elif v > self.maxval:
-            v = self.maxval
-
-        self.task.write(v, auto_start=True)
+        self.task.ai_channels.add_ai_voltage_chan(self.dev, name_to_assign_to_channel="", min_val="", max_val="" )
 
     def get_voltage(self):
         readarray = self.get_voltages(1)
@@ -124,8 +111,8 @@ class DAQmxAnalogOutput(DAQmxChannel):
         self.currentVoltage = 0.0
         self.lastSweepVoltage = 0.0
         # todo: call nidaqmx to add physical ai channel according to dev
-        self.task.ao_channels.add_ao_voltage_chan(dev, min_val=self.minval, max_val=self.maxval )
-      
+        self.task.ao_channels.add_ao_voltage_chan(self.dev, name_to_assign_to_channel="", min_val="", max_val="" )
+        # pydaqmx.DAQmxCreateAOVoltageChan(self.th, self.dev, '', self.minval, self.maxval, pydaqmx.DAQmx_Val_Volts, '')
 
     # todo: are these functions necessary?
     '''
