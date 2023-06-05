@@ -1,47 +1,64 @@
 import nidaqmx
+import nidaqmx.constants as constants
 
 
 class DAQmxChannel:
 
-    def __init__(self, dev):
+    def __init__(self, dev, test = 0):
 
         self.dev = dev
-        self._create_task()
+        self.task = nidaqmx.Task()
+        if test:  
+            self._create_task()
+        self.clock_src = ''
+        self.clock_edge = constants.Edge.RISING
+        self.trig_src = ''
+        self.trig_edge = constants.Edge.RISING
+        self.cont_buffer_size = 100000000
+
+        self.isTimed = False
+        self.read_all_samples = False
+
+        self.grouping_mode = constants.GroupBy.CHANNEL
 
     def _create_task(self):
         self.task = nidaqmx.Task()  # todo: create a task and store the reference
 
     def reset(self):
-        self.task.close()
-        pass  # todo: close the task and create a new one
+        self._clear_task()
+        self._create_task()
+    
+        self.isTimed = False
 
     def start(self):
         self.task.start()
-        pass
-        # pydaqmx.DAQmxStartTask(self.th) # todo
 
     def stop(self):
         self.task.stop()
-        pass
-        # pydaqmx.DAQmxStartTask(self.th) # todo
+        self.task.task_control(nidaqmx.constants.TaskControl.UNRESERVE)
+        
+    def _clear_task(self):
+        self.task.close()
 
-    def stop(self):
-        pass
-        # pydaqmx.DAQmxStopTask(self.th) # todo
-
-    # todo: are the remaining functions necessary?
-
-    '''
     def set_sample_clock(self, src, edge, n):
         self.clock_src = src
         self.clock_edge = edge
 
         if n < self.cont_buffer_size:
-            pydaqmx.DAQmxCfgSampClkTiming(self.th, src, 1000, edge, pydaqmx.DAQmx_Val_FiniteSamps, n)
+            self.task.timing.cfg_samp_clk_timing(rate=1000, source=src, active_edge=edge, sample_mode=constants.AcquisitionType.FINITE, samps_per_chan=n)
         else:  # Use continuous sampling
-            pydaqmx.DAQmxCfgSampClkTiming(self.th, src, 1000000, edge, pydaqmx.DAQmx_Val_ContSamps, self.cont_buffer_size)
+            self.task.timing.cfg_samp_clk_timing(rate=1000000, source=src, active_edge=edge, sample_mode=constants.AcquisitionType.CONTINUOUS, samps_per_chan=self.cont_buffer_size)
 
         self.isTimed = True
+
+
+
+
+
+    # todo: are the remaining functions necessary?
+
+    '''
+
 
     def set_int_clock(self, rate, n):
         if n < self.cont_buffer_size:
